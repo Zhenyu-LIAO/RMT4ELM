@@ -1,10 +1,10 @@
 
 # coding: utf-8
 
-# In[1]:
+# In[7]:
 
 import math
-import scipy.special
+import scipy.special,scipy.linalg
 import numpy as np
 import time
 from matplotlib import pyplot as plt
@@ -13,7 +13,7 @@ from sklearn.datasets import fetch_mldata
 
 # # Generate Data (MNIST or Gaussian mixture)
 
-# In[2]:
+# In[8]:
 
 def gen_data(testcase,Tr,Te,prop,means=None,covs=None):
     rng = np.random
@@ -68,7 +68,7 @@ def gen_data(testcase,Tr,Te,prop,means=None,covs=None):
 
 # # Generate $\sigma(\cdot)$ activation functions
 
-# In[3]:
+# In[9]:
 
 def gen_sig(fun,Z,polynom=None):
     
@@ -92,7 +92,7 @@ def gen_sig(fun,Z,polynom=None):
 
 # # Generate matrices $\Phi_{AB}$
 
-# In[4]:
+# In[10]:
 
 def gen_Phi(fun,A,B,polynom=None,distrib=None,nu=None):
     normA = np.sqrt(np.sum(A**2,axis=0))
@@ -130,7 +130,7 @@ def gen_Phi(fun,A,B,polynom=None,distrib=None,nu=None):
 
 # # Generate $E_{\rm train}$ and $E_{\rm test}$
 
-# In[5]:
+# In[11]:
 
 def gen_E_th():
     d=0
@@ -155,7 +155,7 @@ def gen_E_th():
 
 # # Main code
 
-# In[9]:
+# In[12]:
 
 ## Parameter setting
 n=512
@@ -166,10 +166,10 @@ Te=Tr             # Testing length
 prop=[.5,.5]       # proportions of each class
 K=len(prop)        # number of data classes
 
-gammas = [10**x for x in np.arange(-4,2.25,.5)] # Range of gamma for simulations
+gammas = [10**x for x in np.arange(-4,2.25,.25)] # Range of gamma for simulations
 
-testcase='MNIST'   # testcase for simulation, among 'iid','means','var','orth','MNIST'
-sigma='erf'       # activation function, among 'ReLu', 'sign', 'posit', 'erf', 'poly2', 'cos', 'abs'
+testcase='MNIST'   # testcase for simulation, among 'iid','means','var','orth','mixed',MNIST'
+sigma='ReLu'       # activation function, among 'ReLu', 'sign', 'posit', 'erf', 'poly2', 'cos', 'abs'
 
 
 # Only used for sigma='poly2'
@@ -190,11 +190,7 @@ else:
     if testcase is 'iid':
         for i in range(K):
             means.append(np.zeros(p))
-            covs.append(np.eye(p))
-    elif testcase is 'mixed':
-        for i in range(K):
-            means.append( np.concatenate( (np.zeros(i),3*np.ones(1),np.zeros(p-i-1)) ) )
-            covs.append(np.eye(p)*(1+6*i/np.sqrt(p)))
+            covs.append(np.eye(p))     
     elif testcase is 'means':
         for i in range(K):
             means.append( np.concatenate( (np.zeros(i),4*np.ones(1),np.zeros(p-i-1)) ) )
@@ -207,10 +203,16 @@ else:
         for i in range(K):
             means.append(np.zeros(p))
             covs.append( np.diag(np.concatenate( (np.ones(np.int(np.sum(prop[0:i]*p))),4*np.ones(np.int(prop[i]*p)),np.ones(np.int(np.sum(prop[i+1:]*p))) ) ) ))
-            
+    elif testcase is 'mixed':
+        for i in range(K):
+            means.append( np.concatenate( (np.zeros(i),4*np.ones(1),np.zeros(p-i-1)) ) )
+            covs.append((1+4*i/np.sqrt(p))*scipy.linalg.toeplitz( [(.4*i)**x for x in range(p)] ))            
+
     X_train,X_test,y_train,y_test = gen_data(testcase,Tr,Te,prop,means,covs)
 
 ##Theory
+start_th_calculus = time.time()
+
 Phi=gen_Phi(sigma,X_train,X_train,polynom,distrib,nu)
 L,U = np.linalg.eigh(Phi)
 Phi_cross = gen_Phi(sigma,X_train,X_test,polynom,distrib,nu)
@@ -229,7 +231,14 @@ for gamma in gammas:
     E_train_th[ind],E_test_th[ind] = gen_E_th()
     ind+=1
     
+end_th_calculus = time.time() 
+
+m,s = divmod(end_th_calculus-start_th_calculus,60)
+print('Time for Theoretical Computation {:d}min {:d}s'.format( int(m),math.ceil(s) ))   
+    
 ## Simulations
+start_sim_calculus = time.time()
+
 loops = 10        # Number of generations of W to be averaged over
 
 E_train=np.zeros(len(gammas))
@@ -271,6 +280,11 @@ for loop in range(loops):
         E_test[ind]  += np.linalg.norm(y_test-z_test)**2/Te/loops
 
         ind+=1   
+    
+end_sim_calculus = time.time() 
+
+m,s = divmod(end_sim_calculus-start_sim_calculus,60)
+print('Time for Simulations Computation {:d}min {:d}s'.format( int(m),math.ceil(s) ))    
     
 #Plots    
 p11,=plt.plot(gammas,E_train,'bo')
