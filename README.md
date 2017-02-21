@@ -3,7 +3,7 @@
 
 This page contains a simple demo using [Python 3](https://www.python.org/) of the theoretical results  in the following paper:
 
- [A Random Matrix Approach to Neural Networks] add link to paper on Arxiv!
+ [A Random Matrix Approach to Neural Networks](https://128.84.21.199/abs/1702.05419)
  
  where recent advances in matrix matrix theory are used to analyze the performance of randomly-connected single-layer neural nets (also referred in literatures as *extreme learning machines*). 
  
