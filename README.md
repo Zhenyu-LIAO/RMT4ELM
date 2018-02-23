@@ -23,7 +23,7 @@ To be able to test this code requires the following:
 * [Matplotlib](http://matplotlib.org/) for visulazation
 * [Scikit-learn](http://scikit-learn.org/stable/) for MNIST dataset
  
-We strongly recommend you to use [Jupyter nootbook](http://jupyter.org/) to have a real-time interaction within your web browsers: [here](http://nbviewer.jupyter.org/github/Zhenyu-LIAO/RMT4ELM/blob/master/RMT4ELM.ipynb).
+We strongly recommend you to use [Jupyter nootbook](http://jupyter.org/) to have a direct illustration within your web browsers: [here](http://nbviewer.jupyter.org/github/Zhenyu-LIAO/RMT4ELM/blob/master/RMT4ELM.ipynb).
  
 ## Contact information
 * Zhenyu LIAO
